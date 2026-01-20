@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Archive // SISWANDA ANWAR (ONEPUNYA)</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #ffcc00;
+            --bg: #050505;
+            --surface: #111;
+            --text: #ffffff;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: crosshair; }
+        
+        body { 
+            background-color: var(--bg); 
+            color: var(--text); 
+            font-family: 'Rajdhani', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* Overlay Scanlines */
+        body::after {
+            content: " ";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.05), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.05));
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        nav {
+            position: fixed;
+            width: 100%;
+            padding: 20px 5%;
+            display: flex;
+            justify-content: space-between;
+            z-index: 999;
+            background: rgba(0,0,0,0.9);
+            border-bottom: 1px solid var(--primary);
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-logo { font-family: 'Orbitron'; color: var(--primary); font-size: 0.9rem; letter-spacing: 2px; }
+
+        /* Hero */
+        .hero {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle, rgba(255,204,0,0.1) 0%, rgba(0,0,0,1) 80%),
+                        url('https://images.unsplash.com/photo-1614850523296-d8c1af93d400?q=80&w=2070') center/cover;
+            background-blend-mode: overlay;
+        }
+
+        .hero-content { text-align: center; z-index: 10; }
+
+        .glitch-text {
+            font-family: 'Orbitron';
+            font-size: clamp(2.5rem, 8vw, 5rem);
+            color: var(--primary);
+            text-transform: uppercase;
+            text-shadow: 2px 2px #ff0000, -2px -2px #0000ff;
+            animation: glitch 1s infinite alternate;
+        }
+
+        @keyframes glitch {
+            0% { transform: skew(0deg); }
+            20% { transform: skew(-1deg); text-shadow: 2px 2px #ff0000; }
+            40% { transform: skew(1deg); text-shadow: -2px -2px #0000ff; }
+            100% { transform: skew(0deg); }
+        }
+
+        /* Info Grid */
+        section { padding: 100px 10%; }
+        .grid-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 40px 0;
+        }
+
+        .info-box {
+            border: 1px solid #333;
+            padding: 20px;
+            background: var(--surface);
+            position: relative;
+        }
+
+        .info-label { color: var(--primary); font-size: 0.7rem; text-transform: uppercase; margin-bottom: 5px; opacity: 0.7; }
+        .info-value { font-size: 1.2rem; font-weight: bold; font-family: 'Orbitron'; }
+
+        /* Project Card */
+        .project-card {
+            background: #0f0f0f;
+            border-left: 4px solid var(--primary);
+            padding: 25px;
+            margin-bottom: 15px;
+            transition: 0.3s;
+        }
+        .project-card:hover { background: #1a1a1a; transform: translateX(10px); }
+
+        /* Social Link */
+        .social-link {
+            display: inline-block;
+            margin-top: 15px;
+            color: var(--primary);
+            text-decoration: none;
+            border: 1px solid var(--primary);
+            padding: 8px 15px;
+            margin-right: 10px;
+            font-size: 0.8rem;
+            transition: 0.3s;
+        }
+        .social-link:hover { background: var(--primary); color: #000; font-weight: bold; }
+
+        /* Audio Control */
+        .audio-player {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 9999;
+            background: rgba(255,204,0,0.1);
+            border: 1px solid var(--primary);
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            backdrop-filter: blur(5px);
+        }
+
+        .bars { display: flex; align-items: flex-end; gap: 2px; height: 15px; }
+        .bar { width: 3px; background: var(--primary); animation: pulse 0.5s infinite alternate; }
+        .paused .bar { animation-play-state: paused; height: 3px; }
+        @keyframes pulse { from { height: 3px; } to { height: 15px; } }
+
+        .btn-init {
+            margin-top: 30px;
+            padding: 15px 40px;
+            background: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            font-family: 'Orbitron';
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .btn-init:hover { background: var(--primary); color: #000; box-shadow: 0 0 20px var(--primary); }
+    </style>
+</head>
+<body>
+
+    <audio id="bgMusic" loop>
+        <source src="https://github.com/onepunya/storage/raw/refs/heads/main/DJ%20A%20LITTLE%20SWEET%20SLOW%20REMIX%20BOOTLEG%20(%20FEBRY%20REMIX%20)%20%20SOUND%20VIRAL%20TIKTOK%20TERBARU%20-%20Danz%20Fvnky%20Rmx..mp3" type="audio/mpeg">
+    </audio>
+
+    <nav>
+        <div class="nav-logo">PROTOCOL_ENDFIELD // OPERATOR: ONEPUNYA</div>
+        <div style="font-size: 0.7rem;">STATUS: <span id="status" style="color: #555;">OFFLINE</span></div>
+    </nav>
+
+    <div class="audio-player" id="audioBtn" onclick="toggleMusic()">
+        <div class="bars paused" id="visualizer">
+            <div class="bar"></div><div class="bar" style="animation-delay: 0.2s"></div><div class="bar" style="animation-delay: 0.4s"></div>
+        </div>
+        <span id="audioText" style="font-size: 0.7rem; letter-spacing: 1px;">SYSTEM AUDIO</span>
+    </div>
+
+    <section class="hero">
+        <div class="hero-content" data-aos="fade-down">
+            <p style="color: var(--primary); font-size: 0.8rem; letter-spacing: 5px;">[ DATA_INITIALIZING ]</p>
+            <h1 class="glitch-text">SISWANDA ANWAR</h1>
+            <p style="letter-spacing: 3px; color: #888; margin-top: 10px;">ONEPUNYA // ARCHIVE_V2.0</p>
+            <button class="btn-init" onclick="toggleMusic()">INITIALIZE SYSTEM</button>
+        </div>
+    </section>
+
+    <section id="bio">
+        <h2 style="font-family: 'Orbitron'; border-left: 4px solid var(--primary); padding-left: 15px; margin-bottom: 20px;" data-aos="fade-right">PERSONNEL_FILE</h2>
+        <p style="color: #aaa; font-size: 1.2rem; max-width: 800px; margin-bottom: 40px;" data-aos="fade-up">
+            "Saya adalah pengangguran yang kadang ngegabut untuk hal hal ngawur, bukan orang pinter apalagi jenius."
+        </p>
+
+        <div class="grid-info">
+            <div class="info-box" data-aos="flip-up">
+                <div class="info-label">Pekerjaan</div>
+                <div class="info-value">Nyari Kesenangan Hidup</div>
+            </div>
+            <div class="info-box" data-aos="flip-up" data-aos-delay="100">
+                <div class="info-label">Umur / Kelamin</div>
+                <div class="info-value">23 / Laki-laki</div>
+            </div>
+            <div class="info-box" data-aos="flip-up" data-aos-delay="200">
+                <div class="info-label">Hoby</div>
+                <div class="info-value">Coding / Gaming</div>
+            </div>
+            <div class="info-box" data-aos="flip-up" data-aos-delay="300">
+                <div class="info-label">Github Status</div>
+                <div class="info-value">@onepunya</div>
+            </div>
+        </div>
+
+        <div data-aos="fade-up">
+            <a href="https://github.com/onepunya" target="_blank" class="social-link">GITHUB</a>
+            <a href="https://www.instagram.com/im_a_foxyyy" target="_blank" class="social-link">INSTAGRAM</a>
+        </div>
+    </section>
+
+    <section id="projects">
+        <h2 style="font-family: 'Orbitron'; color: var(--primary); margin-bottom: 30px;" data-aos="fade-right">ACTIVE_DEPLOYMENTS</h2>
+        
+        <div class="project-card" data-aos="fade-left">
+            <div style="font-size: 0.6rem; background: var(--primary); color: #000; display: inline-block; padding: 2px 5px; margin-bottom: 10px; font-weight: bold;">STABLE</div>
+            <h3>LINFO</h3>
+            <p style="color: #666; font-size: 0.9rem; margin-top: 5px;">Project informasi terkoneksi ke database archive.</p>
+        </div>
+
+        <div class="project-card" style="opacity: 0.4;">
+            <div style="font-size: 0.6rem; background: #333; color: #fff; display: inline-block; padding: 2px 5px; margin-bottom: 10px;">REDACTED</div>
+            <h3>[ NEXT_PROJECT ]</h3>
+            <p style="color: #666; font-size: 0.9rem;">Menunggu inisialisasi data baru...</p>
+        </div>
+    </section>
+
+    <footer style="text-align: center; padding: 50px; color: #333; font-size: 0.7rem; border-top: 1px solid #111;">
+        © ARCHIVE SYSTEM // 2026 // OPERATED BY ONEPUNYA
+    </footer>
+
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init({ duration: 1000, once: false });
+
+        const music = document.getElementById("bgMusic");
+        const vis = document.getElementById("visualizer");
+        const status = document.getElementById("status");
+        const audioText = document.getElementById("audioText");
+
+        function toggleMusic() {
+            if (music.paused) {
+                music.play();
+                vis.classList.remove("paused");
+                status.innerText = "ONLINE";
+                status.style.color = "#ffcc00";
+                audioText.innerText = "SYSTEM AUDIO ACTIVE";
+            } else {
+                music.pause();
+                vis.classList.add("paused");
+                status.innerText = "OFFLINE";
+                status.style.color = "#555";
+                audioText.innerText = "SYSTEM AUDIO MUTED";
+            }
+        }
+    </script>
+</body>
+</html>
