@@ -1,324 +1,199 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
+<title>END FIELD SYSTEM</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Archive // SISWANDA (ONEPUNYA)</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
-<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
 
 <style>
 :root{
-  --primary:#ffcc00;
-  --bg:#050505;
-  --surface:#111;
-  --text:#fff;
+  --yellow:#ffb300;
+  --cyan:#00e5ff;
+  --bg:#05080c;
 }
 
-*{margin:0;padding:0;box-sizing:border-box;cursor:crosshair}
-
-html,body{
-  max-width:100%;
-  overflow-x:hidden;
-  background:var(--bg);
-  color:var(--text);
-  font-family:'Rajdhani',sans-serif;
+*{box-sizing:border-box}
+body{
+  margin:0;
+  height:100vh;
+  background:
+    linear-gradient(180deg,#1a1200,#003b40),
+    repeating-linear-gradient(
+      0deg,
+      rgba(255,255,255,0.03),
+      rgba(255,255,255,0.03) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+  color:var(--yellow);
+  font-family:Courier New, monospace;
+  overflow:hidden;
 }
 
-/* scanline */
+/* scanline flicker */
 body::after{
   content:"";
   position:fixed;
   inset:0;
-  background:
-    linear-gradient(rgba(18,16,16,0) 50%,rgba(0,0,0,.25) 50%),
-    linear-gradient(90deg,rgba(255,0,0,.04),rgba(0,255,0,.02),rgba(0,0,255,.04));
-  background-size:100% 2px,3px 100%;
+  background:rgba(255,255,255,0.04);
+  animation:flicker .15s infinite;
   pointer-events:none;
-  z-index:999;
+}
+@keyframes flicker{
+  0%{opacity:.15}
+  50%{opacity:.35}
+  100%{opacity:.15}
 }
 
-/* ================= BOOT ================= */
-#boot{
-  position:fixed;
-  inset:0;
-  background:#050505;
-  color:var(--primary);
-  font-family:'Courier New',monospace;
-  z-index:10000;
+/* header */
+.header{
+  padding:10px 14px;
+  font-size:12px;
+  border-bottom:1px solid #ffaa0044;
+  display:flex;
+  justify-content:space-between;
+}
+
+/* terminal */
+.terminal{
   padding:20px;
+  max-width:800px;
+  font-size:14px;
+  line-height:1.5;
+}
+.line{opacity:0}
+.line.show{opacity:1}
+
+/* center UI */
+.center{
+  position:absolute;
+  inset:0;
   display:flex;
   flex-direction:column;
   justify-content:center;
+  align-items:center;
+  text-align:center;
 }
 
-.boot-terminal{
-  font-size:13px;
-  line-height:1.6;
-  white-space:pre-line;
-  max-width:900px;
+.title{
+  font-size:42px;
+  letter-spacing:4px;
+  text-shadow:0 0 15px #ffb30099;
 }
+.sub{color:#aaa}
 
-.boot-bar{
+/* progress bar */
+.bar{
+  width:70%;
+  max-width:420px;
   height:6px;
-  background:#222;
-  border:1px solid var(--primary);
+  border:1px solid var(--yellow);
   margin-top:20px;
-  overflow:hidden;
 }
-
-.boot-progress{
+.fill{
   height:100%;
   width:0%;
-  background:var(--primary);
-  box-shadow:0 0 10px var(--primary);
-  transition:width .3s;
+  background:var(--yellow);
+  box-shadow:0 0 10px var(--yellow);
+  transition:width .4s;
 }
 
-.hide{
-  opacity:0;
-  pointer-events:none;
-  transition:opacity 1s;
-}
+/* hidden */
+.hide{display:none}
 
-/* ================= NAV ================= */
-nav{
-  position:fixed;
-  width:100%;
-  padding:20px 5%;
-  display:flex;
-  justify-content:space-between;
-  z-index:998;
-  background:rgba(0,0,0,.9);
-  border-bottom:1px solid var(--primary);
-  backdrop-filter:blur(10px);
-}
-
-.nav-logo{
-  font-family:'Orbitron';
-  font-size:.8rem;
-  letter-spacing:2px;
-  color:var(--primary);
-}
-
-/* ================= HERO ================= */
-.hero{
-  height:100vh;
-  width:100vw;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  background:
-    radial-gradient(circle,rgba(255,204,0,.1) 0%,rgba(0,0,0,1) 80%),
-    url("https://images.unsplash.com/photo-1614850523296-d8c1af93d400?q=80&w=2070") center/cover;
-  background-blend-mode:overlay;
-}
-
-.hero-content{text-align:center}
-
-.glitch-text{
-  font-family:'Orbitron';
-  font-size:clamp(2.5rem,8vw,5rem);
-  color:var(--primary);
-  text-shadow:2px 2px #f00,-2px -2px #00f;
-  animation:glitch 1s infinite alternate;
-}
-
-@keyframes glitch{
-  0%{transform:skew(0)}
-  30%{transform:skew(-1deg)}
-  60%{transform:skew(1deg)}
-  100%{transform:skew(0)}
-}
-
-.btn-init{
+/* button */
+button{
   margin-top:30px;
-  padding:15px 40px;
-  background:transparent;
-  color:var(--primary);
-  border:1px solid var(--primary);
-  font-family:'Orbitron';
-  transition:.3s;
+  background:none;
+  color:var(--cyan);
+  border:1px solid var(--cyan);
+  padding:12px 24px;
+  font-family:inherit;
+  letter-spacing:2px;
 }
-.btn-init:hover{
-  background:var(--primary);
-  color:#000;
-  box-shadow:0 0 20px var(--primary);
-}
-
-/* ================= SECTION ================= */
-section{padding:100px 10%}
-
-.grid-info{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-  gap:20px;
-}
-
-.info-box{
-  background:var(--surface);
-  border:1px solid #333;
-  padding:20px;
-}
-
-.info-label{
-  font-size:.7rem;
-  color:var(--primary);
-  opacity:.7;
-}
-.info-value{
-  font-family:'Orbitron';
-  font-size:1.2rem;
-}
-
-/* ================= AUDIO ================= */
-.audio-player{
-  position:fixed;
-  bottom:30px;
-  right:30px;
-  z-index:9999;
-  background:rgba(255,204,0,.1);
-  border:1px solid var(--primary);
-  padding:10px 20px;
-  display:flex;
-  align-items:center;
-  gap:15px;
-}
-
-.bars{
-  display:flex;
-  gap:2px;
-  height:15px;
-}
-.bar{
-  width:3px;
-  background:var(--primary);
-  animation:pulse .5s infinite alternate;
-}
-.paused .bar{animation-play-state:paused;height:3px}
-@keyframes pulse{from{height:3px}to{height:15px}}
-
-footer{
-  text-align:center;
-  padding:50px;
-  color:#333;
-  font-size:.7rem;
-  border-top:1px solid #111;
-}
+button:active{background:#00e5ff22}
 </style>
 </head>
 
 <body>
 
-<!-- BOOT -->
-<div id="boot">
-  <div class="boot-terminal" id="bootText"></div>
-  <div class="boot-bar">
-    <div class="boot-progress" id="bootProgress"></div>
+<div class="header">
+  <div>END FIELD CORE</div>
+  <div id="status">OFFLINE</div>
+</div>
+
+<div id="boot" class="terminal">
+  <div id="bootText"></div>
+</div>
+
+<div id="main" class="center hide">
+  <div class="title">SYSTEM ONLINE</div>
+  <div class="sub">OPERATOR : SISWANDA</div>
+  <button onclick="enableAudio()">ENABLE AUDIO</button>
+</div>
+
+<div class="center">
+  <div class="bar">
+    <div id="fill" class="fill"></div>
   </div>
 </div>
 
-<audio id="bgMusic" loop>
-<source src="https://github.com/onepunya/storage/raw/refs/heads/main/DJ%20A%20LITTLE%20SWEET%20SLOW%20REMIX%20BOOTLEG%20(%20FEBRY%20REMIX%20)%20%20SOUND%20VIRAL%20TIKTOK%20TERBARU%20-%20Danz%20Fvnky%20Rmx..mp3">
-</audio>
+<audio id="beep" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"></audio>
 
-<nav>
-  <div class="nav-logo">PROTOCOL_ENDFIELD // OPERATOR: ONEPUNYA</div>
-  <div style="font-size:.7rem">STATUS: <span id="status" style="color:#555">OFFLINE</span></div>
-</nav>
-
-<div class="audio-player" onclick="toggleMusic()">
-  <div class="bars paused" id="visualizer">
-    <div class="bar"></div><div class="bar"></div><div class="bar"></div>
-  </div>
-  <span id="audioText" style="font-size:.7rem">SYSTEM AUDIO</span>
-</div>
-
-<section class="hero">
-  <div class="hero-content">
-    <p style="color:var(--primary);letter-spacing:5px;font-size:.8rem">[ DATA_INITIALIZING ]</p>
-    <h1 class="glitch-text">SISWANDA</h1>
-    <p style="color:#888;letter-spacing:3px">ONEPUNYA // ARCHIVE_V2.0</p>
-    <button class="btn-init" onclick="startBoot()">INITIALIZE SYSTEM</button>
-  </div>
-</section>
-
-<section>
-<h2 style="font-family:'Orbitron';border-left:4px solid var(--primary);padding-left:15px">PERSONNEL_FILE</h2>
-<p style="color:#aaa;font-size:1.2rem;max-width:800px;margin:30px 0">
-"Saya adalah pengangguran yang kadang ngegabut untuk hal hal ngawur."
-</p>
-
-<div class="grid-info">
-  <div class="info-box"><div class="info-label">Pekerjaan</div><div class="info-value">Nyari Kesenangan</div></div>
-  <div class="info-box"><div class="info-label">Umur</div><div class="info-value">23</div></div>
-  <div class="info-box"><div class="info-label">Hobi</div><div class="info-value">Coding / Gaming</div></div>
-  <div class="info-box"><div class="info-label">Github</div><div class="info-value">@onepunya</div></div>
-</div>
-</section>
-
-<footer>© ARCHIVE SYSTEM // 2026 // ONEPUNYA</footer>
-
-<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 <script>
-AOS.init();
-
-const boot=document.getElementById("boot");
-const bootText=document.getElementById("bootText");
-const bootProgress=document.getElementById("bootProgress");
-
-const music=document.getElementById("bgMusic");
-const vis=document.getElementById("visualizer");
-const status=document.getElementById("status");
-const audioText=document.getElementById("audioText");
-
-const logs=[
-"PROTOCOL_ENDFIELD v2.0",
-"OPERATOR IDENTIFIED : SISWANDA",
-"SYNCING CORE MODULE...",
-"[ OK ] MEMORY CORE",
-"[ OK ] NEURAL LINK",
-"[ WARN ] EXTERNAL NODE OFFLINE",
-"LOADING ARCHIVE DATA...",
-"FINALIZING SYSTEM..."
+const lines = [
+  "> POWER SIGNAL DETECTED",
+  "> INITIALIZING CORE MODULE",
+  "[OK] MEMORY CORE",
+  "[OK] NEURAL LINK",
+  "[WARN] EXTERNAL NODE : OFFLINE",
+  "> SYNCHRONIZING DATA",
+  "[OK] SYSTEM CHECK",
+  "> FINALIZING BOOT SEQUENCE"
 ];
 
-let progress=0;
+const bootText = document.getElementById("bootText");
+const fill = document.getElementById("fill");
+const status = document.getElementById("status");
+const main = document.getElementById("main");
+const beep = document.getElementById("beep");
+
+let i = 0;
 
 function startBoot(){
-  let i=0;
-  const interval=setInterval(()=>{
-    if(i<logs.length){
-      bootText.innerText+=`> ${logs[i]}\n`;
-      progress+=100/logs.length;
-      bootProgress.style.width=progress+"%";
+  status.innerText = "BOOTING";
+  status.style.color = "#ffb300";
+
+  const interval = setInterval(()=>{
+    if(i < lines.length){
+      const div = document.createElement("div");
+      div.className = "line show";
+      div.innerText = lines[i];
+      bootText.appendChild(div);
+      fill.style.width = ((i+1)/lines.length*100)+"%";
       i++;
     }else{
       clearInterval(interval);
-      setTimeout(()=>{
-        boot.classList.add("hide");
-        status.innerText="ONLINE";
-        status.style.color="#ffcc00";
-        music.play();
-        vis.classList.remove("paused");
-        audioText.innerText="SYSTEM AUDIO ACTIVE";
-      },600);
+      finishBoot();
     }
-  },450);
+  }, 700);
 }
 
-function toggleMusic(){
-  if(music.paused){
-    music.play();
-    vis.classList.remove("paused");
-    audioText.innerText="SYSTEM AUDIO ACTIVE";
-  }else{
-    music.pause();
-    vis.classList.add("paused");
-    audioText.innerText="SYSTEM AUDIO MUTED";
-  }
+function finishBoot(){
+  status.innerText = "ONLINE";
+  status.style.color = "#00e5ff";
+  document.getElementById("boot").classList.add("hide");
+  document.querySelector(".bar").classList.add("hide");
+  main.classList.remove("hide");
 }
+
+function enableAudio(){
+  beep.play();
+}
+
+window.onload = () => {
+  startBoot();
+};
 </script>
 
 </body>
