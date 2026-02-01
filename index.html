@@ -167,6 +167,32 @@ button:hover {
   color: #000;
 }
 
+/* --- KODE TAMBAHAN UNTUK VIDEO --- */
+.video-container {
+  margin-top: 40px;
+  width: 100%;
+  max-width: 300px; /* Ukuran khusus Shorts agar proporsional di HP */
+  border: 1px solid #333;
+  padding: 5px;
+  background: #000;
+  position: relative;
+  box-shadow: 0 0 15px rgba(252, 238, 10, 0.2);
+}
+.video-container::before {
+  content: "DATA_FEED // TRANSMISSION";
+  position: absolute;
+  top: -20px; left: 0;
+  font-size: 10px;
+  color: var(--endfield-yellow);
+  letter-spacing: 1px;
+}
+.video-container iframe {
+  width: 100%;
+  aspect-ratio: 9/16;
+  border: none;
+  display: block;
+}
+
 </style>
 </head>
 
@@ -221,6 +247,15 @@ button:hover {
         <a href="https://github.com/onepunya" target="_blank">GITHUB_DB</a>
         <a href="https://www.instagram.com/im_a_foxyyy" target="_blank">INSTAGRAM_COM</a>
       </div>
+
+      <div class="video-container">
+        <iframe 
+          src="https://www.youtube.com/embed/-Di4ahUSI8M?autoplay=1&mute=1&loop=1&playlist=-Di4ahUSI8M" 
+          allow="autoplay; encrypted-media" 
+          allowfullscreen>
+        </iframe>
+      </div>
+
     </div>
 </div>
 
