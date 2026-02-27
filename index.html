@@ -1,344 +1,1122 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>TERMINAL // ENDFIELD PROTOCOL</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet"/>
 <style>
-:root{
-  /* PALET WARNA ARKNIGHTS ENDFIELD */
-  --endfield-yellow: #fcee0a; /* Kuning khas Endfield */
-  --endfield-dark: #0a0a0a;   /* Hitam pekat */
-  --endfield-gray: #888888;   /* Abu-abu untuk teks sekunder */
-  --text-white: #f0f0f0;      /* Putih untuk teks utama */
-  
-  /* Mapping variabel lama ke tema baru agar logika JS tetap jalan */
-  --green: var(--endfield-yellow); 
-  --cyan: #ffffff; 
-  --yellow: var(--endfield-yellow);
-}
+  :root {
+    --orange: #FF6600;
+    --orange2: #FF9900;
+    --orange-dim: rgba(255,102,0,0.15);
+    --orange-glow: rgba(255,102,0,0.4);
+    --bg: #020406;
+    --bg2: #060c0e;
+    --text: #c8d8d0;
+    --text-dim: #4a6858;
+    --green: #00ff88;
+    --green-dim: rgba(0,255,136,0.08);
+  }
 
-html, body {
-  width: 100%; height: 100%;
-  margin: 0; padding: 0;
-  background-color: #000;
-  overflow-x: hidden; 
-}
+  * { margin:0; padding:0; box-sizing:border-box; }
 
-body {
-  background: linear-gradient(180deg, #1a1a1a, #000000);
-  color: var(--text-white);
-  font-family: 'Courier New', monospace;
-}
+  html { scroll-behavior: smooth; }
 
-/* scanline flicker - Dibuat lebih halus (putih/abu) */
-body::after{
-  content:""; position:fixed; inset:0;
-  background:rgba(255,255,255,0.03);
-  background-image: linear-gradient(0deg, transparent 24%, rgba(255, 255, 255, .05) 25%, rgba(255, 255, 255, .05) 26%, transparent 27%, transparent 74%, rgba(255, 255, 255, .05) 75%, rgba(255, 255, 255, .05) 76%, transparent 77%, transparent), linear-gradient(90deg, transparent 24%, rgba(255, 255, 255, .05) 25%, rgba(255, 255, 255, .05) 26%, transparent 27%, transparent 74%, rgba(255, 255, 255, .05) 75%, rgba(255, 255, 255, .05) 76%, transparent 77%, transparent);
-  background-size: 50px 50px;
-  pointer-events:none; z-index: 9999;
-}
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    overflow-x: hidden;
+    cursor: none;
+  }
 
-.header{
-  position: sticky; top: 0;
-  width: 100%; padding: 15px 20px;
-  font-size: 11px; 
-  border-bottom: 2px solid var(--endfield-yellow); /* Garis atas kuning tegas */
-  display: flex; justify-content: space-between;
-  background: rgba(0,0,0,0.95); z-index: 1000;
-  box-sizing: border-box;
-  color: var(--endfield-yellow);
-  font-weight: bold;
-  letter-spacing: 1px;
-}
-
-.content-wrapper { flex: 1; padding-bottom: 50px; }
-
-#boot { padding: 20px; min-height: 250px; position: relative; color: var(--text-white); }
-.boot-log { font-size: 13px; white-space: pre-wrap; margin-bottom: 100px; color: #ccc;}
-
-/* Cursor Blinking - Kuning */
-.cursor {
-    display: inline-block;
-    width: 10px; height: 18px;
-    background: var(--endfield-yellow);
-    animation: blink 0.8s infinite;
-    vertical-align: middle;
-    margin-left: 5px;
-}
-@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-
-.loader-fixed {
+  /* CUSTOM CURSOR */
+  #cursor {
     position: fixed;
-    bottom: 40px; left: 20px; right: 20px;
-    background: transparent; padding: 10px;
-}
-.bar { 
-  width: 100%; max-width: 400px; height: 12px; 
-  background: #222;
-  border: none; 
-  position: relative;
-}
-.fill { 
-  height: 100%; width: 0%; 
-  background: var(--endfield-yellow); 
-  transition: width 0.2s; 
-  box-shadow: 0 0 10px var(--endfield-yellow);
-}
+    width: 20px; height: 20px;
+    border: 1px solid var(--orange);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    transition: width 0.2s, height 0.2s, border-color 0.2s;
+    mix-blend-mode: screen;
+  }
+  #cursor-dot {
+    position: fixed;
+    width: 4px; height: 4px;
+    background: var(--orange);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+  }
+  body:hover #cursor { opacity: 1; }
 
-/* Main Screen */
-.center-content { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 40px 20px; color: var(--text-white);}
+  /* SCANLINES OVERLAY */
+  body::before {
+    content: '';
+    position: fixed;
+    top:0; left:0; right:0; bottom:0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.08) 2px,
+      rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 100;
+  }
 
-/* GAYA JUDUL SEPERTI LOGO ENDFIELD (Block Kuning, Teks Hitam) */
-.title-container {
-  margin-bottom: 10px;
-}
-.title { 
-  font-size: clamp(20px, 6vw, 36px); 
-  letter-spacing: 2px; 
-  font-weight: 900; 
-  background-color: var(--endfield-yellow);
-  color: black;
-  padding: 5px 15px;
-  display: inline-block;
-  transform: skewX(-5deg); /* Sedikit miring biar techy */
-}
+  /* NOISE GRAIN */
+  body::after {
+    content: '';
+    position: fixed;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 99;
+    opacity: 0.3;
+    animation: grain 0.5s steps(1) infinite;
+  }
+  @keyframes grain {
+    0%,100%{ transform: translate(0,0); }
+    10%{ transform: translate(-2%,-3%); }
+    20%{ transform: translate(3%,2%); }
+    30%{ transform: translate(-1%,4%); }
+    40%{ transform: translate(4%,-1%); }
+    50%{ transform: translate(-3%,3%); }
+    60%{ transform: translate(2%,-4%); }
+    70%{ transform: translate(-4%,1%); }
+    80%{ transform: translate(1%,3%); }
+    90%{ transform: translate(3%,-2%); }
+  }
 
-.sub {
-  margin-top: 10px;
-  font-size: 12px;
-  letter-spacing: 2px;
-  color: var(--endfield-gray) !important;
-  border-left: 3px solid var(--endfield-yellow);
-  padding-left: 10px;
-}
+  /* ========================
+     PARALLAX HERO SECTION
+  ======================== */
+  #hero {
+    position: relative;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
 
-.visualizer-container { display: flex; align-items: flex-end; justify-content: center; gap: 6px; height: 40px; margin: 30px 0; }
-.v-bar { width: 8px; background: #333; height: 5px; }
-.active-v .v-bar { 
-  background: var(--endfield-yellow);
-  box-shadow: 0 0 10px var(--endfield-yellow);
-  animation: hack-dance 0.5s infinite alternate; 
-}
-@keyframes hack-dance { 0% { height: 5px; } 100% { height: 40px; } }
+  /* GRID FLOOR PARALLAX LAYER */
+  .parallax-grid {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 60%;
+    background:
+      linear-gradient(transparent 0%, rgba(255,102,0,0.03) 100%),
+      linear-gradient(var(--orange-dim) 1px, transparent 1px),
+      linear-gradient(90deg, var(--orange-dim) 1px, transparent 1px);
+    background-size: 100% 100%, 60px 60px, 60px 60px;
+    transform-origin: bottom center;
+    transform: perspective(600px) rotateX(45deg);
+    will-change: transform;
+  }
 
-.profile-info {
-    margin: 20px 0; font-size: 14px; color: #ddd;
-    border: 1px solid #333; 
-    border-left: 4px solid var(--endfield-yellow); /* Aksen kiri kuning */
-    padding: 20px;
-    background: linear-gradient(90deg, rgba(252, 238, 10, 0.05), transparent);
-    text-align: left;
-    width: 100%; max-width: 400px;
-}
+  /* FLOATING PARTICLES */
+  .particles {
+    position: absolute;
+    top:0; left:0; width:100%; height:100%;
+    pointer-events: none;
+  }
+  .particle {
+    position: absolute;
+    width: 2px; height: 2px;
+    background: var(--orange);
+    border-radius: 50%;
+    animation: float linear infinite;
+    opacity: 0;
+  }
+  @keyframes float {
+    0%   { transform: translateY(100vh) translateX(0); opacity: 0; }
+    10%  { opacity: 0.8; }
+    90%  { opacity: 0.4; }
+    100% { transform: translateY(-10vh) translateX(var(--drift)); opacity: 0; }
+  }
 
-/* Tombol Gaya Endfield */
-button {
-  background: transparent; color: var(--endfield-yellow);
-  border: 2px solid var(--endfield-yellow); padding: 15px 30px;
-  font-family: inherit; font-weight: 900; cursor: pointer;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  transition: all 0.3s;
-  position: relative;
-  overflow: hidden;
-}
-button:hover { 
-  background: var(--endfield-yellow); 
-  color: #000; 
-  box-shadow: 0 0 15px rgba(252, 238, 10, 0.4);
-}
+  /* GLITCH BACKGROUND TEXT */
+  .bg-text {
+    position: absolute;
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(80px, 18vw, 200px);
+    font-weight: 900;
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(255,102,0,0.06);
+    letter-spacing: 0.1em;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    white-space: nowrap;
+    user-select: none;
+    will-change: transform;
+  }
 
-.hide { display: none !important; }
+  /* HERO CONTENT */
+  .hero-content {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    padding: 2rem;
+  }
 
-.links { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
-.links a { 
-  color: #fff; text-decoration: none; 
-  font-size: 12px; font-weight: bold;
-  background: #222;
-  padding: 10px 20px; display: inline-block; 
-  border-left: 2px solid var(--endfield-yellow);
-  transition: 0.3s;
-}
-.links a:hover {
-  background: var(--endfield-yellow);
-  color: #000;
-}
+  .sys-label {
+    font-size: 11px;
+    letter-spacing: 6px;
+    color: var(--text-dim);
+    margin-bottom: 1rem;
+    animation: fadeIn 1s ease both;
+  }
 
-/* --- KODE TAMBAHAN UNTUK VIDEO --- */
-.video-container {
-  margin-top: 40px;
-  width: 100%;
-  max-width: 300px; /* Ukuran khusus Shorts agar proporsional di HP */
-  border: 1px solid #333;
-  padding: 5px;
-  background: #000;
-  position: relative;
-  box-shadow: 0 0 15px rgba(252, 238, 10, 0.2);
-}
-.video-container::before {
-  content: "DATA_FEED // TRANSMISSION";
-  position: absolute;
-  top: -20px; left: 0;
-  font-size: 10px;
-  color: var(--endfield-yellow);
-  letter-spacing: 1px;
-}
-.video-container iframe {
-  width: 100%;
-  aspect-ratio: 9/16;
-  border: none;
-  display: block;
-}
+  .hero-title {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(2.5rem, 8vw, 6rem);
+    font-weight: 900;
+    color: var(--orange);
+    letter-spacing: 0.15em;
+    text-shadow:
+      0 0 20px var(--orange-glow),
+      0 0 60px rgba(255,102,0,0.2),
+      0 0 100px rgba(255,102,0,0.1);
+    animation: glitchTitle 6s infinite;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+  }
 
+  @keyframes glitchTitle {
+    0%,94%,100% {
+      text-shadow: 0 0 20px var(--orange-glow), 0 0 60px rgba(255,102,0,0.2);
+      transform: none;
+    }
+    95% {
+      text-shadow: -3px 0 #00ffff, 3px 0 #ff0080, 0 0 20px var(--orange-glow);
+      transform: skewX(-2deg);
+    }
+    96% {
+      text-shadow: 3px 0 #00ffff, -3px 0 #ff0080, 0 0 20px var(--orange-glow);
+      transform: skewX(2deg);
+    }
+    97% {
+      text-shadow: 0 0 20px var(--orange-glow);
+      transform: none;
+    }
+  }
+
+  .hero-sub {
+    font-size: clamp(10px, 2vw, 14px);
+    color: var(--text-dim);
+    letter-spacing: 4px;
+    margin-bottom: 3rem;
+    animation: fadeIn 1.5s ease both;
+  }
+
+  .status-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .status-item {
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .status-item .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+    animation: blink 2s infinite;
+  }
+  @keyframes blink {
+    0%,100%{ opacity:1; }
+    50%{ opacity:0.2; }
+  }
+
+  .scroll-hint {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-dim);
+    font-size: 10px;
+    letter-spacing: 3px;
+    animation: scrollBounce 2s infinite;
+  }
+  .scroll-hint::after {
+    content: '';
+    width: 1px;
+    height: 40px;
+    background: linear-gradient(var(--orange), transparent);
+  }
+  @keyframes scrollBounce {
+    0%,100%{ transform: translateX(-50%) translateY(0); }
+    50%{ transform: translateX(-50%) translateY(8px); }
+  }
+
+  /* ========================
+     BOOT SEQUENCE SECTION
+  ======================== */
+  #boot {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    padding: 6rem 2rem;
+    overflow: hidden;
+  }
+
+  .boot-bg {
+    position: absolute;
+    top:0; left:0; right:0; bottom:0;
+    background: radial-gradient(ellipse at 20% 50%, rgba(255,102,0,0.05) 0%, transparent 60%);
+    will-change: transform;
+  }
+
+  .boot-inner {
+    max-width: 800px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .terminal-window {
+    border: 1px solid rgba(255,102,0,0.3);
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow:
+      0 0 40px rgba(255,102,0,0.08),
+      inset 0 0 60px rgba(0,0,0,0.8);
+    background: rgba(6,12,14,0.95);
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+  .terminal-window.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .terminal-bar {
+    background: rgba(255,102,0,0.08);
+    border-bottom: 1px solid rgba(255,102,0,0.2);
+    padding: 0.7rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .t-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: rgba(255,102,0,0.4);
+  }
+  .t-dot:nth-child(2){ background: rgba(255,153,0,0.4); }
+  .t-dot:nth-child(3){ background: rgba(255,204,0,0.3); }
+  .t-title {
+    margin-left: auto;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 3px;
+  }
+
+  .terminal-body {
+    padding: 1.5rem 2rem;
+    min-height: 300px;
+  }
+
+  .t-line {
+    margin-bottom: 0.5rem;
+    font-size: clamp(12px, 2vw, 14px);
+    line-height: 1.8;
+    opacity: 0;
+    transform: translateX(-10px);
+    animation: lineReveal 0.4s ease forwards;
+  }
+  @keyframes lineReveal {
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .t-prompt { color: var(--orange); }
+  .t-cmd { color: var(--text); }
+  .t-output { color: var(--text-dim); padding-left: 1.5rem; }
+  .t-success { color: var(--green); }
+  .t-warn { color: var(--orange2); }
+  .t-comment { color: #2a4a3a; }
+  .t-value { color: var(--orange2); }
+
+  .cursor-blink {
+    display: inline-block;
+    width: 8px; height: 14px;
+    background: var(--orange);
+    animation: cursorBlink 1s step-end infinite;
+    vertical-align: text-bottom;
+    margin-left: 2px;
+  }
+  @keyframes cursorBlink {
+    0%,100%{ opacity:1; }
+    50%{ opacity:0; }
+  }
+
+  /* ========================
+     ID CARD SECTION
+  ======================== */
+  #profile {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6rem 2rem;
+    overflow: hidden;
+  }
+
+  .profile-bg {
+    position: absolute;
+    top:0; left:0; right:0; bottom:0;
+    background: radial-gradient(ellipse at 80% 50%, rgba(255,102,0,0.06) 0%, transparent 60%);
+    will-change: transform;
+  }
+
+  /* HEX GRID PATTERN */
+  .hex-bg {
+    position: absolute;
+    top:0; left:0; right:0; bottom:0;
+    opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='100'%3E%3Cpath d='M28 66L0 50V18L28 2l28 16v32z' fill='none' stroke='%23FF6600' stroke-width='1'/%3E%3C/svg%3E");
+    background-size: 56px 100px;
+    will-change: transform;
+  }
+
+  .id-card {
+    position: relative;
+    z-index: 10;
+    border: 1px solid rgba(255,102,0,0.25);
+    background: rgba(6,12,14,0.9);
+    border-radius: 8px;
+    padding: 3rem;
+    max-width: 600px;
+    width: 100%;
+    box-shadow:
+      0 0 60px rgba(255,102,0,0.06),
+      0 0 0 1px rgba(255,102,0,0.05) inset;
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+  .id-card.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .id-card:hover {
+    box-shadow:
+      0 0 80px rgba(255,102,0,0.1),
+      0 0 0 1px rgba(255,102,0,0.15) inset;
+  }
+
+  .id-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(255,102,0,0.12);
+  }
+
+  .id-badge {
+    width: 48px; height: 48px;
+    border: 1px solid rgba(255,102,0,0.4);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Orbitron', monospace;
+    font-size: 18px;
+    font-weight: 900;
+    color: var(--orange);
+    text-shadow: 0 0 10px var(--orange-glow);
+    position: relative;
+    overflow: hidden;
+  }
+  .id-badge::before {
+    content: '';
+    position: absolute;
+    top: -100%; left: -100%;
+    width: 300%; height: 300%;
+    background: linear-gradient(45deg, transparent 30%, rgba(255,102,0,0.1) 50%, transparent 70%);
+    animation: shimmer 3s infinite;
+  }
+  @keyframes shimmer {
+    0%{ transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+    100%{ transform: translateX(100%) translateY(100%) rotate(45deg); }
+  }
+
+  .id-title-group { flex: 1; }
+  .id-name {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(1.2rem, 4vw, 1.8rem);
+    font-weight: 700;
+    color: var(--orange);
+    letter-spacing: 0.1em;
+    text-shadow: 0 0 20px var(--orange-glow);
+  }
+  .id-sub {
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 3px;
+    margin-top: 0.25rem;
+  }
+
+  .id-permission {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--green);
+    background: rgba(0,255,136,0.05);
+    border: 1px solid rgba(0,255,136,0.15);
+    padding: 0.3rem 0.8rem;
+    border-radius: 2px;
+  }
+
+  .id-fields {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .id-field {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 1rem;
+    align-items: start;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid rgba(255,102,0,0.05);
+    opacity: 0;
+    transform: translateX(-15px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+  .id-field.visible { opacity: 1; transform: translateX(0); }
+
+  .field-key {
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+  }
+  .field-key::before { content: '$ '; color: var(--orange); }
+
+  .field-val {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.6;
+  }
+  .field-val .highlight { color: var(--orange2); }
+
+  /* QUOTE */
+  .id-quote {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    border-left: 2px solid var(--orange);
+    background: var(--orange-dim);
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.8;
+    font-style: italic;
+    opacity: 0;
+    transition: opacity 1s ease 0.5s;
+  }
+  .id-quote.visible { opacity: 1; }
+
+  /* ========================
+     LINKS SECTION
+  ======================== */
+  #links {
+    position: relative;
+    min-height: 60vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    overflow: hidden;
+  }
+
+  .links-inner {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    width: 100%;
+    max-width: 600px;
+  }
+
+  .section-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 11px;
+    letter-spacing: 6px;
+    color: var(--text-dim);
+    margin-bottom: 3rem;
+  }
+  .section-title::before { content: '// '; color: var(--orange); }
+
+  .link-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .link-card {
+    display: block;
+    position: relative;
+    border: 1px solid rgba(255,102,0,0.2);
+    padding: 1.5rem;
+    text-decoration: none;
+    background: rgba(6,12,14,0.8);
+    border-radius: 4px;
+    overflow: hidden;
+    transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s;
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  .link-card.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .link-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,102,0,0.05), transparent);
+    transition: left 0.5s;
+  }
+  .link-card:hover {
+    border-color: var(--orange);
+    box-shadow: 0 0 30px rgba(255,102,0,0.15);
+    transform: translateY(-4px);
+  }
+  .link-card:hover::before { left: 100%; }
+
+  .link-tag {
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--text-dim);
+    margin-bottom: 0.5rem;
+  }
+  .link-name {
+    font-family: 'Orbitron', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--orange);
+    letter-spacing: 0.1em;
+  }
+  .link-arrow {
+    position: absolute;
+    bottom: 1rem;
+    right: 1rem;
+    color: var(--text-dim);
+    font-size: 16px;
+    transition: color 0.3s, transform 0.3s;
+  }
+  .link-card:hover .link-arrow {
+    color: var(--orange);
+    transform: translate(4px, -4px);
+  }
+
+  /* ========================
+     FOOTER
+  ======================== */
+  footer {
+    border-top: 1px solid rgba(255,102,0,0.1);
+    padding: 2rem;
+    text-align: center;
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: var(--text-dim);
+  }
+  footer span { color: var(--orange); }
+
+  /* HORIZONTAL DIVIDERS */
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0 2rem;
+    max-width: 800px;
+    margin: 0 auto;
+    opacity: 0.3;
+  }
+  .divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--orange));
+  }
+  .divider::after { background: linear-gradient(90deg, var(--orange), transparent); }
+  .divider-text {
+    font-size: 9px;
+    letter-spacing: 4px;
+    color: var(--orange);
+    white-space: nowrap;
+  }
+
+  /* ========================
+     ANIMATIONS
+  ======================== */
+  @keyframes fadeIn {
+    from { opacity:0; transform: translateY(10px); }
+    to { opacity:1; transform: translateY(0); }
+  }
+
+  /* AUDIO BUTTON */
+  #audio-btn {
+    position: fixed;
+    top: 1.5rem;
+    right: 1.5rem;
+    z-index: 200;
+    background: rgba(6,12,14,0.9);
+    border: 1px solid rgba(255,102,0,0.3);
+    color: var(--orange);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    padding: 0.5rem 1rem;
+    cursor: none;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+  #audio-btn:hover {
+    border-color: var(--orange);
+    box-shadow: 0 0 15px rgba(255,102,0,0.2);
+  }
+
+  /* CORNER DECORATIONS */
+  .corner-dec {
+    position: absolute;
+    width: 20px; height: 20px;
+    z-index: 5;
+  }
+  .corner-dec.tl { top:1.5rem; left:1.5rem; border-top: 1px solid var(--orange); border-left: 1px solid var(--orange); opacity: 0.4; }
+  .corner-dec.tr { top:1.5rem; right:1.5rem; border-top: 1px solid var(--orange); border-right: 1px solid var(--orange); opacity: 0.4; }
+  .corner-dec.bl { bottom:1.5rem; left:1.5rem; border-bottom: 1px solid var(--orange); border-left: 1px solid var(--orange); opacity: 0.4; }
+  .corner-dec.br { bottom:1.5rem; right:1.5rem; border-bottom: 1px solid var(--orange); border-right: 1px solid var(--orange); opacity: 0.4; }
+
+  /* RESPONSIVE */
+  @media(max-width:600px){
+    .terminal-body { padding: 1rem; }
+    .id-card { padding: 1.5rem; }
+    .id-field { grid-template-columns: 1fr; gap: 0.25rem; }
+    .link-grid { grid-template-columns: 1fr; }
+    #audio-btn { top:1rem; right:1rem; }
+  }
 </style>
 </head>
-
 <body>
 
-<div class="header">
-  <div>ENDFIELD_OS // SYS.VER.4.0</div>
-  <div id="clock">00:00:00</div>
-  <div id="status" style="color:#555">[ STANDBY ]</div>
-</div>
+<!-- CURSOR -->
+<div id="cursor"></div>
+<div id="cursor-dot"></div>
 
-<div class="content-wrapper">
-    <div id="boot">
-      <div id="bootText" class="boot-log"></div><span id="cursor" class="cursor"></span>
-      
-      <div class="loader-fixed" id="loader">
-        <div style="font-size: 10px; margin-bottom: 5px; color: var(--endfield-yellow); font-weight:bold;">INITIALIZING PROTOCOL...</div>
-        <div class="bar"><div id="fill" class="fill"></div></div>
+<!-- AUDIO BTN -->
+<button id="audio-btn" onclick="toggleAudio()">[ AUDIO: OFF ]</button>
+
+<!-- ========================
+     HERO
+======================== -->
+<section id="hero">
+  <div class="corner-dec tl"></div>
+  <div class="corner-dec tr"></div>
+  <div class="corner-dec bl"></div>
+  <div class="corner-dec br"></div>
+
+  <div class="bg-text" id="bgText">ENDFIELD</div>
+
+  <div class="parallax-grid" id="parallaxGrid"></div>
+
+  <div class="particles" id="particles"></div>
+
+  <div class="hero-content">
+    <p class="sys-label">ENDFIELD_OS // SYS.VER.4.0 // INITIALIZED</p>
+    <h1 class="hero-title">SISWANDA</h1>
+    <p class="hero-sub">TERMINAL // ENDFIELD PROTOCOL</p>
+    <div class="status-bar">
+      <span class="status-item"><span class="dot"></span>SYSTEM ONLINE</span>
+      <span class="status-item">|</span>
+      <span class="status-item" id="clock">00:00:00</span>
+      <span class="status-item">|</span>
+      <span class="status-item">[ STANDBY ]</span>
+    </div>
+  </div>
+
+  <div class="scroll-hint">SCROLL</div>
+</section>
+
+<!-- DIV -->
+<div class="divider"><span class="divider-text">INITIALIZING PROTOCOL</span></div>
+
+<!-- ========================
+     BOOT SEQUENCE
+======================== -->
+<section id="boot">
+  <div class="boot-bg" id="bootBg"></div>
+  <div class="boot-inner">
+    <div class="terminal-window" id="termWin">
+      <div class="terminal-bar">
+        <div class="t-dot"></div>
+        <div class="t-dot"></div>
+        <div class="t-dot"></div>
+        <span class="t-title">ENDFIELD_TERMINAL v4.0</span>
+      </div>
+      <div class="terminal-body" id="termBody"></div>
+    </div>
+  </div>
+</section>
+
+<!-- DIV -->
+<div class="divider"><span class="divider-text">SYSTEM IDENTIFICATION</span></div>
+
+<!-- ========================
+     PROFILE
+======================== -->
+<section id="profile">
+  <div class="profile-bg" id="profileBg"></div>
+  <div class="hex-bg" id="hexBg"></div>
+
+  <div class="id-card" id="idCard">
+    <div class="id-header">
+      <div class="id-badge">S1</div>
+      <div class="id-title-group">
+        <div class="id-name">SISWANDA</div>
+        <div class="id-sub">USER PROFILE // CLASSIFIED</div>
+      </div>
+      <div class="id-permission">PERMISSION: GRANTED</div>
+    </div>
+
+    <div class="id-fields">
+      <div class="id-field" data-delay="0">
+        <span class="field-key">ID_USER</span>
+        <span class="field-val"><span class="highlight">Siswanda</span></span>
+      </div>
+      <div class="id-field" data-delay="100">
+        <span class="field-key">AGE</span>
+        <span class="field-val"><span class="highlight">23</span></span>
+      </div>
+      <div class="id-field" data-delay="200">
+        <span class="field-key">CURRENT_OBJECTIVE</span>
+        <span class="field-val">
+          <span class="highlight">▸</span> Nyari Kesenangan<br/>
+          <span class="highlight">▸</span> Bikin hal-hal ngawur
+        </span>
+      </div>
+      <div class="id-field" data-delay="300">
+        <span class="field-key">AFFILIATION</span>
+        <span class="field-val"><span class="highlight">ONEPUNYA</span> // mr.one</span>
+      </div>
+      <div class="id-field" data-delay="400">
+        <span class="field-key">STATUS</span>
+        <span class="field-val" style="color:var(--green)">● ACTIVE // ONLINE</span>
       </div>
     </div>
 
-    <div id="main" class="center-content hide">
-      
-      <div class="title-container">
-        <div class="title">SISWANDA</div>
-      </div>
-      
-      <div class="sub">[ PERMISSION: GRANTED // ONEPUNYA ]</div>
-      
-      <div class="visualizer-container" id="visualizer">
-          <div class="v-bar"></div><div class="v-bar"></div><div class="v-bar"></div><div class="v-bar"></div><div class="v-bar"></div>
-      </div>
-
-      <button id="audioBtn" onclick="toggleAudio()">INITIALIZE AUDIO</button>
-
-      <div class="profile-info">
-        <div style="color:var(--endfield-gray)">// SYSTEM IDENTIFICATION</div>
-        <br>
-        <div>$ ID_USER</div>
-        <div style="color:var(--endfield-yellow); font-weight:bold;">> Siswanda</div>
-        <br>
-        <div>$ CURRENT_OBJECTIVE</div>
-        <div style="color:var(--text-white)">> Nyari Kesenangan</div>
-        <div style="color:var(--text-white)">> Age : 23</div>
-        <br>
-        <div style="font-size:12px; color:var(--endfield-gray); margin-top:10px; font-style:italic;">
-          "Pengangguran ngegabut, dan bikin hal-hal ngawur."
-        </div>
-      </div>
-
-      <div class="links">
-        <a href="https://github.com/onepunya" target="_blank">GITHUB_DB</a>
-        <a href="https://www.instagram.com/im_a_foxyyy" target="_blank">INSTAGRAM_COM</a>
-      </div>
-
-      <div class="video-container">
-        <iframe 
-          src="https://www.youtube.com/embed/-Di4ahUSI8M?autoplay=1&mute=1&loop=1&playlist=-Di4ahUSI8M" 
-          allow="autoplay; encrypted-media" 
-          allowfullscreen>
-        </iframe>
-      </div>
-
+    <div class="id-quote" id="idQuote">
+      "Pengangguran ngegabut, dan bikin hal-hal ngawur."
     </div>
-</div>
+  </div>
+</section>
 
-<audio id="bgMusic" loop>
-  <source src="https://github.com/onepunya/storage/raw/refs/heads/main/DJ%20A%20LITTLE%20SWEET%20SLOW%20REMIX%20BOOTLEG%20(%20FEBRY%20REMIX%20)%20%20SOUND%20VIRAL%20TIKTOK%20TERBARU%20-%20Danz%20Fvnky%20Rmx..mp3" type="audio/mpeg">
-</audio>
+<!-- DIV -->
+<div class="divider"><span class="divider-text">DATABASE LINKS</span></div>
+
+<!-- ========================
+     LINKS
+======================== -->
+<section id="links">
+  <div class="links-inner">
+    <p class="section-title">EXTERNAL CONNECTIONS</p>
+    <div class="link-grid">
+      <a href="https://github.com/onepunya" target="_blank" class="link-card" data-delay="0">
+        <div class="link-tag">DATABASE_01</div>
+        <div class="link-name">GITHUB_DB</div>
+        <span class="link-arrow">↗</span>
+      </a>
+      <a href="https://www.instagram.com/im_a_foxyyy" target="_blank" class="link-card" data-delay="150">
+        <div class="link-tag">DATABASE_02</div>
+        <div class="link-name">INSTAGRAM_COM</div>
+        <span class="link-arrow">↗</span>
+      </a>
+      <a href="https://api-playground-plum.vercel.app/" target="_blank" class="link-card" data-delay="300">
+        <div class="link-tag">PROJECT_01</div>
+        <div class="link-name">ONEPUNYA.API</div>
+        <span class="link-arrow">↗</span>
+      </a>
+      <a href="https://api-playground-plum.vercel.app/playground" target="_blank" class="link-card" data-delay="450">
+        <div class="link-tag">PROJECT_02</div>
+        <div class="link-name">PLAYGROUND</div>
+        <span class="link-arrow">↗</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <span>ENDFIELD_OS</span> // SYS.VER.4.0 // © 2026 SISWANDA // ALL PROTOCOLS RESERVED
+</footer>
 
 <script>
-const logs = [
-  "onepunya@endfield:~$ establishing_connection...\n",
-  "[ SUCCESS ] Target System Found.\n",
-  "onepunya@endfield:~$ decryption_key_accepted\n",
-  "Loading Endfield Assets... 100%\n",
-  "onepunya@endfield:~$ access control --override\n",
-  "Rendering Interface...\n",
-  "System Stability: NORMAL\n",
-  "WELCOME TO ENDFIELD INDUSTRIES\n"
+// ========================
+// CURSOR
+// ========================
+const cursor = document.getElementById('cursor');
+const cursorDot = document.getElementById('cursor-dot');
+let mx = 0, my = 0, cx = 0, cy = 0;
+
+document.addEventListener('mousemove', e => {
+  mx = e.clientX; my = e.clientY;
+  cursorDot.style.left = mx + 'px';
+  cursorDot.style.top = my + 'px';
+});
+
+(function moveCursor() {
+  cx += (mx - cx) * 0.12;
+  cy += (my - cy) * 0.12;
+  cursor.style.left = cx + 'px';
+  cursor.style.top = cy + 'px';
+  requestAnimationFrame(moveCursor);
+})();
+
+document.querySelectorAll('a, button').forEach(el => {
+  el.addEventListener('mouseenter', () => {
+    cursor.style.width = '36px';
+    cursor.style.height = '36px';
+    cursor.style.borderColor = 'var(--orange2)';
+  });
+  el.addEventListener('mouseleave', () => {
+    cursor.style.width = '20px';
+    cursor.style.height = '20px';
+    cursor.style.borderColor = 'var(--orange)';
+  });
+});
+
+// ========================
+// CLOCK
+// ========================
+function updateClock() {
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2,'0');
+  const m = String(now.getMinutes()).padStart(2,'0');
+  const s = String(now.getSeconds()).padStart(2,'0');
+  document.getElementById('clock').textContent = `${h}:${m}:${s}`;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ========================
+// PARTICLES
+// ========================
+const pContainer = document.getElementById('particles');
+for (let i = 0; i < 30; i++) {
+  const p = document.createElement('div');
+  p.className = 'particle';
+  const x = Math.random() * 100;
+  const dur = 8 + Math.random() * 15;
+  const delay = Math.random() * 15;
+  const drift = (Math.random() - 0.5) * 200;
+  const size = Math.random() > 0.8 ? 3 : 2;
+  p.style.cssText = `
+    left: ${x}%;
+    width: ${size}px; height: ${size}px;
+    animation-duration: ${dur}s;
+    animation-delay: -${delay}s;
+    --drift: ${drift}px;
+    ${Math.random() > 0.7 ? 'background: var(--orange2);' : ''}
+  `;
+  pContainer.appendChild(p);
+}
+
+// ========================
+// PARALLAX
+// ========================
+const bgText = document.getElementById('bgText');
+const parallaxGrid = document.getElementById('parallaxGrid');
+const bootBg = document.getElementById('bootBg');
+const profileBg = document.getElementById('profileBg');
+const hexBg = document.getElementById('hexBg');
+
+window.addEventListener('scroll', () => {
+  const y = window.scrollY;
+
+  // Hero parallax
+  bgText.style.transform = `translate(-50%, calc(-50% + ${y * 0.3}px))`;
+  parallaxGrid.style.transform = `perspective(600px) rotateX(45deg) translateY(${y * 0.2}px)`;
+
+  // Section backgrounds
+  if (bootBg) bootBg.style.transform = `translateY(${(y - 600) * 0.15}px)`;
+  if (profileBg) profileBg.style.transform = `translateY(${(y - 1400) * 0.1}px)`;
+  if (hexBg) hexBg.style.transform = `translateY(${(y - 1400) * 0.05}px)`;
+});
+
+// ========================
+// INTERSECTION OBSERVER
+// ========================
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.15 });
+
+observer.observe(document.getElementById('termWin'));
+observer.observe(document.getElementById('idCard'));
+
+// ID fields staggered
+const idFields = document.querySelectorAll('.id-field');
+const idObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const delay = parseInt(entry.target.dataset.delay) || 0;
+      setTimeout(() => entry.target.classList.add('visible'), delay);
+    }
+  });
+}, { threshold: 0.1 });
+idFields.forEach(f => idObserver.observe(f));
+
+const quoteObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) entry.target.classList.add('visible');
+  });
+}, { threshold: 0.3 });
+quoteObserver.observe(document.getElementById('idQuote'));
+
+// Link cards staggered
+const linkCards = document.querySelectorAll('.link-card');
+const linkObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const delay = parseInt(entry.target.dataset.delay) || 0;
+      setTimeout(() => entry.target.classList.add('visible'), delay);
+    }
+  });
+}, { threshold: 0.1 });
+linkCards.forEach(c => linkObserver.observe(c));
+
+// ========================
+// TERMINAL TYPEWRITER
+// ========================
+const lines = [
+  { text: '> ENDFIELD_OS // SYS.VER.4.0', cls: 't-warn', delay: 200 },
+  { text: '> INITIALIZING PROTOCOL...', cls: 't-warn', delay: 400 },
+  { text: '', cls: 't-comment', delay: 500 },
+  { text: '$ BOOT_SEQUENCE --verbose', cls: 't-prompt', delay: 700 },
+  { text: '  [OK] Core systems loaded', cls: 't-success', delay: 1000 },
+  { text: '  [OK] Identity module verified', cls: 't-success', delay: 1300 },
+  { text: '  [OK] Network interface active', cls: 't-success', delay: 1600 },
+  { text: '  [OK] Permission matrix compiled', cls: 't-success', delay: 1900 },
+  { text: '', cls: 't-comment', delay: 2000 },
+  { text: '$ AUTH --user siswanda --key onepunya', cls: 't-prompt', delay: 2200 },
+  { text: '  Authenticating...', cls: 't-output', delay: 2600 },
+  { text: '  [ PERMISSION: GRANTED // ONEPUNYA ]', cls: 't-success', delay: 3000 },
+  { text: '', cls: 't-comment', delay: 3100 },
+  { text: '$ QUERY --field current_objective', cls: 't-prompt', delay: 3300 },
+  { text: '  > Nyari Kesenangan', cls: 't-value', delay: 3700 },
+  { text: '  > Age : 23', cls: 't-value', delay: 3900 },
+  { text: '', cls: 't-comment', delay: 4000 },
+  { text: '> PROTOCOL STABLE. STANDBY.', cls: 't-warn', delay: 4300 },
 ];
 
-const bootText = document.getElementById("bootText");
-const fill = document.getElementById("fill");
-const clock = document.getElementById("clock");
-const status = document.getElementById("status");
-const main = document.getElementById("main");
-const music = document.getElementById("bgMusic");
-
-// Clock function
-setInterval(() => {
-    const now = new Date();
-    clock.innerText = now.getHours().toString().padStart(2, '0') + ":" + 
-                      now.getMinutes().toString().padStart(2, '0') + ":" + 
-                      now.getSeconds().toString().padStart(2, '0');
-}, 1000);
-
-let logIndex = 0;
-let charIndex = 0;
-
-function typeLog() {
-    if (logIndex < logs.length) {
-        if (charIndex < logs[logIndex].length) {
-            bootText.innerHTML += logs[logIndex].charAt(charIndex);
-            charIndex++;
-            fill.style.width = ((logIndex / logs.length) * 100) + "%";
-            setTimeout(typeLog, 20); // Sedikit lebih cepat biar smooth
-            window.scrollTo(0, document.body.scrollHeight);
-        } else {
-            charIndex = 0;
-            logIndex++;
-            setTimeout(typeLog, 300); 
-        }
-    } else {
-        fill.style.width = "100%";
-        setTimeout(finishBoot, 800);
+let terminalActivated = false;
+const termObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting && !terminalActivated) {
+      terminalActivated = true;
+      runTerminal();
     }
+  });
+}, { threshold: 0.3 });
+termObserver.observe(document.getElementById('termWin'));
+
+function runTerminal() {
+  const body = document.getElementById('termBody');
+  lines.forEach(({ text, cls, delay }) => {
+    setTimeout(() => {
+      const el = document.createElement('div');
+      el.className = `t-line ${cls}`;
+      el.style.animationDelay = '0s';
+      el.textContent = text || ' ';
+      body.appendChild(el);
+      body.scrollTop = body.scrollHeight;
+    }, delay);
+  });
+  // blinking cursor at end
+  setTimeout(() => {
+    const el = document.createElement('div');
+    el.className = 't-line t-prompt';
+    el.style.animationDelay = '0s';
+    el.innerHTML = '$ <span class="cursor-blink"></span>';
+    body.appendChild(el);
+  }, 4700);
 }
 
-function finishBoot(){
-  status.innerText = "[ ONLINE ]";
-  status.style.color = "var(--endfield-yellow)";
-  document.getElementById("boot").classList.add("hide");
-  document.getElementById("cursor").classList.add("hide");
-  document.getElementById("loader").classList.add("hide");
-  main.classList.remove("hide");
-}
+// ========================
+// AUDIO (optional ambient)
+// ========================
+let audioCtx = null;
+let playing = false;
 
-function toggleAudio(){
-  if(music.paused){
-    music.play();
-    document.getElementById("visualizer").classList.add("active-v");
-    document.getElementById("audioBtn").innerText = "TERMINATE AUDIO";
-    document.getElementById("audioBtn").style.background = "var(--endfield-yellow)";
-    document.getElementById("audioBtn").style.color = "black";
+function toggleAudio() {
+  const btn = document.getElementById('audio-btn');
+  if (!playing) {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      playAmbient(audioCtx);
+    } else {
+      audioCtx.resume();
+    }
+    playing = true;
+    btn.textContent = '[ AUDIO: ON ]';
   } else {
-    music.pause();
-    document.getElementById("visualizer").classList.remove("active-v");
-    document.getElementById("audioBtn").innerText = "INITIALIZE AUDIO";
-    document.getElementById("audioBtn").style.background = "transparent";
-    document.getElementById("audioBtn").style.color = "var(--endfield-yellow)";
+    audioCtx.suspend();
+    playing = false;
+    btn.textContent = '[ AUDIO: OFF ]';
   }
 }
 
-window.onload = typeLog;
-</script>
+function playAmbient(ctx) {
+  // Low drone
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  const filter = ctx.createBiquadFilter();
 
+  osc.type = 'sawtooth';
+  osc.frequency.value = 55;
+  filter.type = 'lowpass';
+  filter.frequency.value = 200;
+  gain.gain.value = 0.05;
+
+  osc.connect(filter);
+  filter.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start();
+
+  // Pulse modulation
+  const lfo = ctx.createOscillator();
+  const lfoGain = ctx.createGain();
+  lfo.frequency.value = 0.3;
+  lfoGain.gain.value = 20;
+  lfo.connect(lfoGain);
+  lfoGain.connect(filter.frequency);
+  lfo.start();
+}
+</script>
 </body>
 </html>
